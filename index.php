@@ -1,5 +1,6 @@
 <?php
 	require_once('includes/bdd.php');
+	require_once('includes/sessions.php');
 ?>
 
 <?php
@@ -25,14 +26,6 @@
 
 
 	<?php
-	session_start();
-
-
-	if(isset($_POST['disconnect']) && $_POST['disconnect']=="disconnect")
-	{
-		unset($_SESSION['id']);
-		unset($_SESSION['pseudo']);
-	}
 
 	if(isset($_POST['mail']) && $_POST['mail']!="" && verif_mail($_POST['mail'],$bdd)
 	&& isset($_POST['password']) && $_POST['password']!="" && verif_password($_POST['password'])
@@ -92,16 +85,52 @@
 			{
 				include('includes/head_log.php.inc');
 
-				$req=$bdd->prepare('select id_following from follow where id_user=:id_user');
+				$req=$bdd->prepare('select u.pseudo as pseudo, f.id_following as id from follow f join users u on f.id_following=u.id where f.id_user=:id_user');
 				$req->execute(array('id_user'=>$_SESSION['id']));
 
 				while($r=$req->fetch()) 
 				{
+				$name=$bdd->prepare('select p.name as playlist_name from playlist p where p.id_owner=:id_owner');
+				$name->execute(array('id_owner'=>$r['id']));
+
+				$play=$bdd->prepare('select id_songs from playlist where id_owner=:id_owner');
+				$play->execute(array('id_owner' => $r['id']));
+					
+				// s.name as song_name, s.url as song_url 
+
 			?>
+
+
 				<div class='playlist_min'>
+				<?php echo $r['pseudo']; ?>
+				<?php 
+				while($playlist_name=$name->fetch())
+				{
+					echo $playlist_name['name'];
+					while($playlist=$play->fetch())
+					{
 
+						$id_song=explode(";",$playlist['id_songs']);
+						foreach ($id_song as $value) 
+						{
 
+							$songs=$bdd->prepare('select name, url from songs where id=:id');
+							$songs->execute(array('id'=>$value));
+							$res=$songs->fetch();
+							if($res!="")
+							{
+								echo "</br>";
+								echo "<a href=".$res['url'].">".$res['name']."</a>";
+								
+							}
+						}
+						echo "</br>";
+						echo $playlist['id']."<>".$playlist['id']."</br>";
+					}
+				}
+				?>
 				</div>	
+				</hr>
 
 			<?php
 				}
