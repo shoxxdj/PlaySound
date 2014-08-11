@@ -4,4 +4,13 @@
 		{
 			include('includes/head_log.php.inc');
 			require_once('includes/bdd.php');
+
+
+
+			$r=$bdd->
+?>
+		
+
+<?php
+		}
 ?>
